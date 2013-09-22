@@ -20,13 +20,17 @@ package eu.maxschuster.vaadin.localstorage;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 import com.vaadin.server.AbstractClientConnector;
 import com.vaadin.server.AbstractExtension;
+import com.vaadin.server.Extension;
 import com.vaadin.shared.communication.ServerRpc;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.UI;
 import com.vaadin.util.ReflectTools;
 
 import eu.maxschuster.vaadin.localstorage.client.LocalStorageClientRpc;
@@ -35,6 +39,8 @@ import eu.maxschuster.vaadin.localstorage.shared.LocalStorageState;
 
 /**
  * Allows limited access to the browsers localStorage.
+ * 
+ * You have to use {@link LocalStorage#getCurrent()} or {@link LocalStorage#getCurrent(UI)} to get an instance of {@link LocalStorage}
  * 
  * @author Max Schuster <dev@maxschutser.eu>
  */
@@ -45,6 +51,11 @@ public class LocalStorage extends AbstractExtension {
 	 * Local mirror of the client side localStorage.
 	 */
 	private Map<String, String> items = null;
+	
+	/**
+	 * Queue of jobs that should run when {@link LocalStorage} becomes ready
+	 */
+	private Queue<Runnable> doWhenReadyQueue = new LinkedList<Runnable>();
 	
 	/**
 	 * {@link ServerRpc} that contains methods who get invoked by the client side.
@@ -61,6 +72,7 @@ public class LocalStorage extends AbstractExtension {
 				getState().ready = true;
 				getState().supported = true;
 				LocalStorage.this.items = items;
+				runDoWhenReadyQueue();
 				fireReadyEvent();
 			}
 		}
@@ -74,6 +86,7 @@ public class LocalStorage extends AbstractExtension {
 			if (!getState().ready) {
 				getState().ready = true;
 				getState().supported = false;
+				runDoWhenReadyQueue();
 				fireReadyEvent();
 			}
 		}
@@ -114,13 +127,40 @@ public class LocalStorage extends AbstractExtension {
 	 * Extends the given {@link AbstractClientConnector}.
 	 * @param clientConnector {@link AbstractClientConnector} that should get extended.
 	 */
-	public LocalStorage(AbstractComponent componentToExtend) {
+	private LocalStorage(AbstractComponent componentToExtend) {
 		registerRpc(serverRpc, LocalStorageServerRpc.class);
 		extend(componentToExtend);
 	}
 	
 	/**
-	 * Returns an unmodifiable map that contains all items.
+	 * Gets or creates the {@link LocalStorage} instance of the currently active {@link UI}.
+	 * @return {@link LocalStorage} instance of the currently active {@link UI}.
+	 */
+	public static LocalStorage getCurrent() {
+		return getCurrent(UI.getCurrent());
+	}
+	
+	/**
+	 * Gets or creates the {@link LocalStorage} instance of the given parent {@link UI}.
+	 * @param parent Parent {@link UI}
+	 * @return {@link LocalStorage} instance of the given parent {@link UI}.
+	 */
+	public static LocalStorage getCurrent(UI parent) {
+		if (parent == null) {
+			throw new NullPointerException();
+		}
+		
+		for (Extension extension : parent.getExtensions()) {
+			if (extension instanceof LocalStorage) {
+				return (LocalStorage) extension;
+			}
+		}
+		
+		return new LocalStorage(parent);
+	}
+	
+	/**
+	 * Returns an unmodifiable {@link Map} that contains all items.
 	 * Returns <code>null</code> if the {@link LocalStorage} is not ready, yet.
 	 * @return Unmodifiable map containing all items
 	 */
@@ -166,6 +206,34 @@ public class LocalStorage extends AbstractExtension {
 	 */
 	public void refresh() {
 		getRpcProxy(LocalStorageClientRpc.class).refresh();
+	}
+	
+	/**
+	 * Adds a {@link Runnable} job that gets invoked when {@link LocalStorage}
+	 * has become ready or immediately when {@link LocalStorage} already is ready.
+	 * If the job has been added to the queue the run later it will get invoked
+	 * before the {@link ReadyEvent} fires.
+	 * @param job Job that should be done when {@link LocalStorage} is ready.
+	 */
+	public void doWhenReady(Runnable job) {
+		if (job == null)
+			throw new NullPointerException();
+		
+		if (isReady()) {
+			job.run();
+		} else {
+			doWhenReadyQueue.offer(job);
+		}
+	}
+	
+	/**
+	 * Runs all queued jobs.
+	 */
+	private void runDoWhenReadyQueue() {
+		Runnable job = null;
+		while ((job = doWhenReadyQueue.poll()) != null) {
+			job.run();
+		}
 	}
 	
 	/**

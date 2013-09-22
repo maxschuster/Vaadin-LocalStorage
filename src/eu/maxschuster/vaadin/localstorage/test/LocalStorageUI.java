@@ -49,7 +49,8 @@ public class LocalStorageUI extends UI {
 
 	@Override
 	protected void init(VaadinRequest request) {
-		LocalStorage localStorage = new LocalStorage(this);
+		final LocalStorage localStorage = LocalStorage.getCurrent();
+		System.out.println(localStorage + ", " + LocalStorage.getCurrent() + ", " + LocalStorage.getCurrent());
 		localStorage.setLiveUpdate(false);
 		localStorage.addReadyListener(new ReadyListener() {
 			
@@ -83,6 +84,15 @@ public class LocalStorageUI extends UI {
 				System.out.println("update item " + event.getKey() + " " + event.getOldValue() + " " + event.getNewValue());
 			}
 		});
+
+		final boolean immediately = localStorage.isReady();
+		localStorage.doWhenReady(new Runnable() {
+			
+			@Override
+			public void run() {
+				System.out.println("I'll run when localStorage is ready (immediately=" + immediately + ")");
+			}
+		});
 		
 		final VerticalLayout layout = new VerticalLayout();
 		layout.setMargin(true);
@@ -92,9 +102,19 @@ public class LocalStorageUI extends UI {
 		button.addClickListener(new Button.ClickListener() {
 			public void buttonClick(ClickEvent event) {
 				layout.addComponent(new Label("Thank you for clicking"));
+				
+				final boolean immediately = localStorage.isReady();
+				localStorage.doWhenReady(new Runnable() {
+					@Override
+					public void run() {
+						System.out.println("I'll run immediately (immediately=" + immediately + ")");
+					}
+				});
 			}
 		});
 		layout.addComponent(button);
+		
+		
 	}
 
 }
