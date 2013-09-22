@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Implementation-Title: LocalStorage
+Implementation-Version: dev
+Vaadin-Package-Version: 1
+Vaadin-Widgetsets: eu.maxschuster.vaadin.localstorage.LocalStorageWidg
+ etset
+Class-Path: 
+
