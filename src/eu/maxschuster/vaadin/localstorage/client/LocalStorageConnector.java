@@ -18,11 +18,7 @@
 
 package eu.maxschuster.vaadin.localstorage.client;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.google.gwt.storage.client.Storage;
-import com.google.gwt.storage.client.StorageEvent;
 import com.vaadin.client.ServerConnector;
 import com.vaadin.client.communication.RpcProxy;
 import com.vaadin.client.communication.StateChangeEvent;
@@ -50,24 +46,36 @@ public class LocalStorageConnector extends AbstractExtensionConnector {
 
 		/*
 		 * (non-Javadoc)
-		 * @see eu.maxschuster.vaadin.localstorage.client.LocalStorageClientRpc#setItem(java.lang.String, java.lang.String)
+		 * @see eu.maxschuster.vaadin.localstorage.client.LocalStorageClientRpc#getItem(java.lang.String, eu.maxschuster.vaadin.localstorage.shared.LocalStorageItemCallback)
 		 */
 		@Override
-		public void setItem(String key, String data) {
-			if (!Storage.isLocalStorageSupported())
-				return;
-			Storage.getLocalStorageIfSupported().setItem(key, data);
+		public void getItem(String key, int callback) {
+			boolean supported = Storage.isSupported();
+			String data = null;
+			if (supported) {
+				Storage s = Storage.getSessionStorageIfSupported();
+				data = s.getItem(key);
+			}
+			if (callback > -1)
+				serverRpc.callLocalStorageItemCallback(callback, supported, key, null, data);
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see eu.maxschuster.vaadin.localstorage.client.LocalStorageClientRpc#removeItem(java.lang.String)
+		 * @see eu.maxschuster.vaadin.localstorage.client.LocalStorageClientRpc#setItem(java.lang.String, java.lang.String, eu.maxschuster.vaadin.localstorage.shared.LocalStorageItemCallback)
 		 */
 		@Override
-		public void removeItem(String key) {
-			if (!Storage.isLocalStorageSupported())
-				return;
-			Storage.getLocalStorageIfSupported().removeItem(key);
+		public void setItem(String key, String data,
+				int callback) {
+			boolean supported = Storage.isSupported();
+			String oldData = null;
+			if (supported) {
+				Storage s = Storage.getSessionStorageIfSupported();
+				oldData = s.getItem(key);
+				s.setItem(key, data);
+			}
+			if (callback > -1)
+				serverRpc.callLocalStorageItemCallback(callback, supported, key, oldData, data);
 		}
 
 		/*
@@ -75,22 +83,14 @@ public class LocalStorageConnector extends AbstractExtensionConnector {
 		 * @see eu.maxschuster.vaadin.localstorage.client.LocalStorageClientRpc#clear()
 		 */
 		@Override
-		public void clear() {
-			if (!Storage.isLocalStorageSupported())
-				return;
-			Storage.getLocalStorageIfSupported().clear();
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see eu.maxschuster.vaadin.localstorage.client.LocalStorageClientRpc#refresh()
-		 */
-		@Override
-		public void refresh() {
-			if (!Storage.isLocalStorageSupported())
-				return;
-			Storage storage = Storage.getLocalStorageIfSupported();
-			LocalStorageConnector.this.serverRpc.refresh(storageToMap(storage));
+		public void clear(int callback) {
+			boolean supported = Storage.isSupported();
+			if (supported) {
+				Storage s = Storage.getSessionStorageIfSupported();
+				s.clear();
+			}
+			if (callback > -1)
+				serverRpc.callLocalStorageItemCallback(callback, supported, null, null, null);
 		}
 		
 	};
@@ -114,40 +114,7 @@ public class LocalStorageConnector extends AbstractExtensionConnector {
 	 */
 	@Override
 	protected void extend(ServerConnector target) {
-		if (!Storage.isLocalStorageSupported()) {
-			serverRpc.readyNotSupported();
-			return;
-		}
-		Storage storage = Storage.getLocalStorageIfSupported();
-		Storage.addStorageEventHandler(new StorageEvent.Handler() {
-
-			@Override
-			public void onStorageChange(StorageEvent event) {
-				if (getState().liveUpdate) {
-					serverRpc.updateItem(event.getKey(), event.getOldValue(), event.getNewValue());
-				}
-			}
-			
-		});
-		serverRpc.ready(storageToMap(storage));
-	}
-	
-	/**
-	 * Creates a {@link Map} that contains all entries of the given {@link Storage}.
-	 * @param storage {@link Storage} that should get turned into a {@link Map}.
-	 * @return {@link Map} of all entries.
-	 */
-	private Map<String, String> storageToMap(Storage storage) {
-		int length = storage.getLength();
-		Map<String, String> map = new HashMap<String, String>(length);
 		
-		for (int i = 0; i < length; i++) {
-			String key = storage.key(i);
-			String value = storage.getItem(key);
-			map.put(key, value);
-		}
-		
-		return map;
 	}
 
 	/*

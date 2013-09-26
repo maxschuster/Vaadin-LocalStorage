@@ -29,20 +29,5 @@ import eu.maxschuster.vaadin.localstorage.LocalStorage;
  */
 @SuppressWarnings("serial")
 public class LocalStorageState extends SharedState {
-
-	/**
-	 * Live updates are enabled.
-	 */
-	public boolean liveUpdate = true;
-	
-	/**
-	 * Browser supports localStorage.
-	 */
-	public Boolean supported = null;
-	
-	/**
-	 * {@link LocalStorage} is ready for use.
-	 */
-	public boolean ready = false;
 	
 }

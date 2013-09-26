@@ -18,25 +18,18 @@
 
 package eu.maxschuster.vaadin.localstorage.test;
 
-import java.util.Map.Entry;
-
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.Theme;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import eu.maxschuster.vaadin.localstorage.LocalStorage;
-import eu.maxschuster.vaadin.localstorage.LocalStorage.ReadyEvent;
-import eu.maxschuster.vaadin.localstorage.LocalStorage.ReadyListener;
-import eu.maxschuster.vaadin.localstorage.LocalStorage.RefreshEvent;
-import eu.maxschuster.vaadin.localstorage.LocalStorage.RefreshListener;
-import eu.maxschuster.vaadin.localstorage.LocalStorage.UpdateEvent;
-import eu.maxschuster.vaadin.localstorage.LocalStorage.UpdateListener;
+import eu.maxschuster.vaadin.localstorage.shared.LocalStorageItem;
+import eu.maxschuster.vaadin.localstorage.shared.LocalStorageItemCallback;
 
 /**
  * Test {@link UI}
@@ -50,49 +43,38 @@ public class LocalStorageUI extends UI {
 	@Override
 	protected void init(VaadinRequest request) {
 		final LocalStorage localStorage = LocalStorage.getCurrent();
-		System.out.println(localStorage + ", " + LocalStorage.getCurrent() + ", " + LocalStorage.getCurrent());
-		localStorage.setLiveUpdate(false);
-		localStorage.addReadyListener(new ReadyListener() {
+		
+		
+		
+		LocalStorageItemCallback cb = new LocalStorageItemCallback() {
 			
+			/*
+			 * (non-Javadoc)
+			 * @see eu.maxschuster.vaadin.localstorage.shared.LocalStorageItemCallback#onSussess(java.lang.String, java.lang.String, java.lang.String)
+			 */
 			@Override
-			public void onReady(ReadyEvent event) {
-				StringBuilder a = new StringBuilder();
-				for (Entry<String, String> e : event.getLocalStorage().getItems().entrySet()) {
-					a.append(e.getKey()).append(" = ").append(e.getValue()).append('\n');
-				}
-				Notification.show(a.toString());
-				event.getLocalStorage().removeItem("SESSIONID2");
-				event.getLocalStorage().setItem("SESSIONID3", "123Schlachmichtod");
-				event.getLocalStorage().refresh();
+			public void onSussess(LocalStorageItem item) {
+				System.out.println(item);
 			}
-		});
-		localStorage.addRefreshListener(new RefreshListener() {
 			
+			/*
+			 * (non-Javadoc)
+			 * @see eu.maxschuster.vaadin.localstorage.shared.LocalStorageItemCallback#onError()
+			 */
 			@Override
-			public void onRefresh(RefreshEvent event) {
-				StringBuilder a = new StringBuilder();
-				for (Entry<String, String> e : event.getLocalStorage().getItems().entrySet()) {
-					a.append(e.getKey()).append(" = ").append(e.getValue()).append('\n');
-				}
-				Notification.show(a.toString());
+			public void onError() {
+				System.out.println("ERROR");
 			}
-		});
-		localStorage.addUpdateListener(new UpdateListener() {
 			
-			@Override
-			public void onUpdate(UpdateEvent event) {
-				System.out.println("update item " + event.getKey() + " " + event.getOldValue() + " " + event.getNewValue());
-			}
-		});
-
-		final boolean immediately = localStorage.isReady();
-		localStorage.doWhenReady(new Runnable() {
-			
-			@Override
-			public void run() {
-				System.out.println("I'll run when localStorage is ready (immediately=" + immediately + ")");
-			}
-		});
+		};
+		
+		localStorage.setItem("test", "Lorem ipsum dolor sit amet, consectetur adipiscing elit.", cb);
+		
+		localStorage.setItem("test", "Duis commodo.", cb);
+		
+		localStorage.getItem("test", cb);
+		
+		localStorage.clear();
 		
 		final VerticalLayout layout = new VerticalLayout();
 		layout.setMargin(true);
@@ -102,14 +84,6 @@ public class LocalStorageUI extends UI {
 		button.addClickListener(new Button.ClickListener() {
 			public void buttonClick(ClickEvent event) {
 				layout.addComponent(new Label("Thank you for clicking"));
-				
-				final boolean immediately = localStorage.isReady();
-				localStorage.doWhenReady(new Runnable() {
-					@Override
-					public void run() {
-						System.out.println("I'll run immediately (immediately=" + immediately + ")");
-					}
-				});
 			}
 		});
 		layout.addComponent(button);
