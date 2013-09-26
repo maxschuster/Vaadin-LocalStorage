@@ -18,8 +18,6 @@
 
 package eu.maxschuster.vaadin.localstorage.shared;
 
-import java.util.Map;
-
 import com.vaadin.shared.communication.ServerRpc;
 
 /**
@@ -27,30 +25,9 @@ import com.vaadin.shared.communication.ServerRpc;
  * @author Max Schuster <dev@maxschutser.eu>
  */
 public interface LocalStorageServerRpc extends ServerRpc {
-	
-	/**
-	 * Ready callback if the browser does not support localStorage.
-	 */
-	public void readyNotSupported();
-	
-	/**
-	 * Ready callback if the browser supports localStorage.
-	 * @param storage {@link Map} that contains all items of localStorage.
-	 */
-	public void ready(Map<String, String> storage);
-	
-	/**
-	 * Refresh callback.
-	 * @param storage {@link Map} that contains all items of localStorage.
-	 */
-	public void refresh(Map<String, String> storage);
-	
-	/**
-	 * Item update callback.
-	 * @param key Key of the item that has changed.
-	 * @param oldValue Old value of the item.
-	 * @param newValue New value of the item.
-	 */
-	public void updateItem(String key, String oldValue, String newValue);
 
+	public void callLocalStorageItemCallback(
+			int callback, boolean success,
+			String key, String oldData, String data);
+	
 }

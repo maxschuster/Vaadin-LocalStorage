@@ -26,27 +26,10 @@ import com.vaadin.shared.communication.ClientRpc;
  */
 public interface LocalStorageClientRpc extends ClientRpc {
 	
-	/**
-	 * Sets the data of an item.
-	 * @param key Key of the item.
-	 * @param data Data of the item.
-	 */
-	public void setItem(String key, String data);
+	public void getItem(String key, int callback);
 	
-	/**
-	 * Removes the item.
-	 * @param key Key of the item.
-	 */
-	public void removeItem(String key);
+	public void setItem(String key, String data, int callback);
 	
-	/**
-	 * Clears the entire storage.
-	 */
-	public void clear();
-	
-	/**
-	 * Triggers a full refresh of the server side mirror of localStorage.
-	 */
-	public void refresh();
+	public void clear(int callback);
 	
 }
