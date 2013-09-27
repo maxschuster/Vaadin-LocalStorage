@@ -26,6 +26,14 @@ import com.vaadin.shared.communication.ServerRpc;
  */
 public interface LocalStorageServerRpc extends ServerRpc {
 
+	/**
+	 * @param callback Callback id. If < 0 no callback will get triggered.
+	 * @param success Action was success full
+	 * @param key Items key
+	 * @param oldData Items old data
+	 * @param data Items new data
+	 * @return void
+	 */
 	public void callLocalStorageItemCallback(
 			int callback, boolean success,
 			String key, String oldData, String data);

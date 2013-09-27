@@ -18,6 +18,7 @@
 
 package eu.maxschuster.vaadin.localstorage.client;
 
+import com.google.gwt.storage.client.Storage;
 import com.vaadin.shared.communication.ClientRpc;
 
 /**
@@ -26,10 +27,28 @@ import com.vaadin.shared.communication.ClientRpc;
  */
 public interface LocalStorageClientRpc extends ClientRpc {
 	
+	/**
+	 * Trigger {@link Storage#getItem(String)} on client-side
+	 * @param key Items key
+	 * @param callback Callback id. If < 0 no callback will get triggered.
+	 * @return void
+	 */
 	public void getItem(String key, int callback);
 	
+	/**
+	 * Trigger {@link Storage#setItem(String, String)} on client-side
+	 * @param key Items key
+	 * @param data Items data. If data is null the item will get removed.
+	 * @param callback Callback id. If < 0 no callback will get triggered.
+	 * @return void
+	 */
 	public void setItem(String key, String data, int callback);
 	
+	/**
+	 * Trigger {@link Storage#clear()} on client-side
+	 * @param callback Callback id. If < 0 no callback will get triggered.
+	 * @return void
+	 */
 	public void clear(int callback);
 	
 }
