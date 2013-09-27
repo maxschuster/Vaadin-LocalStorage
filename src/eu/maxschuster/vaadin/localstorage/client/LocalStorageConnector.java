@@ -72,7 +72,10 @@ public class LocalStorageConnector extends AbstractExtensionConnector {
 			if (supported) {
 				Storage s = Storage.getSessionStorageIfSupported();
 				oldData = s.getItem(key);
-				s.setItem(key, data);
+				if (data != null)
+					s.setItem(key, data);
+				else
+					s.removeItem(key);
 			}
 			if (callback > -1)
 				serverRpc.callLocalStorageItemCallback(callback, supported, key, oldData, data);

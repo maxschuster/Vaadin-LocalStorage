@@ -19,7 +19,6 @@
 package eu.maxschuster.vaadin.localstorage.test;
 
 import com.vaadin.annotations.Push;
-import com.vaadin.annotations.Theme;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -28,23 +27,20 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import eu.maxschuster.vaadin.localstorage.LocalStorage;
-import eu.maxschuster.vaadin.localstorage.shared.LocalStorageItem;
-import eu.maxschuster.vaadin.localstorage.shared.LocalStorageItemCallback;
+import eu.maxschuster.vaadin.localstorage.LocalStorageItem;
+import eu.maxschuster.vaadin.localstorage.LocalStorageItemCallback;
 
 /**
  * Test {@link UI}
  * @author Max Schuster <dev@maxschutser.eu>
  */
 @SuppressWarnings("serial")
-@Theme("localstorage")
 @Push
 public class LocalStorageUI extends UI {
 
 	@Override
 	protected void init(VaadinRequest request) {
 		final LocalStorage localStorage = LocalStorage.getCurrent();
-		
-		
 		
 		LocalStorageItemCallback cb = new LocalStorageItemCallback() {
 			
@@ -53,7 +49,7 @@ public class LocalStorageUI extends UI {
 			 * @see eu.maxschuster.vaadin.localstorage.shared.LocalStorageItemCallback#onSussess(java.lang.String, java.lang.String, java.lang.String)
 			 */
 			@Override
-			public void onSussess(LocalStorageItem item) {
+			public void onSuccess(LocalStorageItem item) {
 				System.out.println(item);
 			}
 			

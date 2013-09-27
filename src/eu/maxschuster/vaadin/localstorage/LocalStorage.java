@@ -21,6 +21,7 @@ package eu.maxschuster.vaadin.localstorage;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gwt.storage.client.Storage;
 import com.vaadin.server.AbstractClientConnector;
 import com.vaadin.server.AbstractExtension;
 import com.vaadin.server.Extension;
@@ -29,8 +30,6 @@ import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.UI;
 
 import eu.maxschuster.vaadin.localstorage.client.LocalStorageClientRpc;
-import eu.maxschuster.vaadin.localstorage.shared.LocalStorageItem;
-import eu.maxschuster.vaadin.localstorage.shared.LocalStorageItemCallback;
 import eu.maxschuster.vaadin.localstorage.shared.LocalStorageServerRpc;
 import eu.maxschuster.vaadin.localstorage.shared.LocalStorageState;
 
@@ -62,7 +61,7 @@ public class LocalStorage extends AbstractExtension {
 				LocalStorageItemCallback cb = itemCallbacks.get(callback);
 				if(cb != null) {
 					if (success) {
-						cb.onSussess(new LocalStorageItem(key, oldData, data));
+						cb.onSuccess(new LocalStorageItem(key, oldData, data));
 					} else {
 						cb.onError();
 					}
@@ -126,6 +125,11 @@ public class LocalStorage extends AbstractExtension {
 		return (AbstractComponent) super.getParent();
 	}
 	
+	/**
+	 * Adds a callback and returns a callback id
+	 * @param callback The callback
+	 * @return Callback id
+	 */
 	private int addCallback(LocalStorageItemCallback callback) {
 		if (callback == null)
 			return -1;
@@ -136,22 +140,54 @@ public class LocalStorage extends AbstractExtension {
 		}
 	}
 	
+	/**
+	 * Gets the items data from the {@link Storage} on the client-side.
+	 * @param key Items key
+	 * @param callback A callback
+	 * @return void
+	 */
 	public void getItem(String key, LocalStorageItemCallback callback) {
+		if (callback == null)
+			throw new NullPointerException("Getting an item from LocalStorage doesn't make much sense...");
 		getRpcProxy(LocalStorageClientRpc.class).getItem(key, addCallback(callback));
 	}
 	
+	/**
+	 * Sets the items data in the {@link Storage} on the
+	 * client-side and calls the given callback.
+	 * @param key Items key
+	 * @param data Items new data
+	 * @param callback A callback
+	 * @return void
+	 */
 	public void setItem(String key, String data, LocalStorageItemCallback callback) {
 		getRpcProxy(LocalStorageClientRpc.class).setItem(key, data, addCallback(callback));
 	}
 	
+	/**
+	 * Sets the items data in the {@link Storage} on the client-side
+	 * @param key Items key
+	 * @param data Items new data
+	 * @return void
+	 */
 	public void setItem(String key, String data) {
 		setItem(key, data, null);
 	}
 	
+	/**
+	 * Clears the {@link Storage} on the client-side and
+	 * calls the given callback
+	 * @param callback A callback
+	 * @return void
+	 */
 	public void clear(LocalStorageItemCallback callback) {
 		getRpcProxy(LocalStorageClientRpc.class).clear(addCallback(callback));
 	}
 	
+	/**
+	 * Clears the {@link Storage} on the client-side
+	 * @return void
+	 */
 	public void clear() {
 		clear(null);
 	}
