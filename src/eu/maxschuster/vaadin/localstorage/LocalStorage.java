@@ -148,15 +148,16 @@ public class LocalStorage extends AbstractExtension {
 	 */
 	public void getItem(String key, LocalStorageItemCallback callback) {
 		if (callback == null)
-			throw new NullPointerException("Getting an item from LocalStorage doesn't make much sense...");
+			throw new NullPointerException("Getting an item from LocalStorage doesn't make much sense when callback is null... ;-)");
 		getRpcProxy(LocalStorageClientRpc.class).getItem(key, addCallback(callback));
 	}
 	
 	/**
 	 * Sets the items data in the {@link Storage} on the
-	 * client-side and calls the given callback.
+	 * client-side and calls the given callback
 	 * @param key Items key
-	 * @param data Items new data
+	 * @param data Items new data.
+	 * If null the item will get removed
 	 * @param callback A callback
 	 * @return void
 	 */
@@ -167,11 +168,32 @@ public class LocalStorage extends AbstractExtension {
 	/**
 	 * Sets the items data in the {@link Storage} on the client-side
 	 * @param key Items key
-	 * @param data Items new data
+	 * @param data Items new data.
+	 * If null the item will get removed
 	 * @return void
 	 */
 	public void setItem(String key, String data) {
 		setItem(key, data, null);
+	}
+	
+	/**
+	 * Removes the item from the {@link Storage} on the client-side 
+	 * and calls the given callback.
+	 * @param key Items key
+	 * @param callback A callback
+	 * @return void
+	 */
+	public void removeItem(String key, LocalStorageItemCallback callback) {
+		setItem(key, null, callback);
+	}
+	
+	/**
+	 * Removes the item from the {@link Storage} on the client-side
+	 * @param key Items key
+	 * @return void
+	 */
+	public void removeItem(String key) {
+		removeItem(key, null);
 	}
 	
 	/**
