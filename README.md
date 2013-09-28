@@ -1,5 +1,14 @@
+# Vaadin LocalStorage
+Vaadin 7 Add-on to access localStorage.
+
+Developed as replacement for "keep me signed in" cookies
+in Applications with Push enabled.
+
 # License
 Apache License, Version 2.0
+
+# Compatibility
+[Vaadin 7](https://vaadin.com/home "Vaadin Homepage")
 
 #Usage
 
@@ -28,7 +37,7 @@ ls.getItem("test", cb);
 
 ls.clear();
 ```
-See also: "eu.maxschuster.vaadin.localstorage.test.LocalStorageUI.java"
+See also: *"eu.maxschuster.vaadin.localstorage.test.LocalStorageUI.java"*
 
 # Installation
 
