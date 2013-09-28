@@ -33,8 +33,9 @@ public interface LocalStorageItemCallback {
 	
 	/**
 	 * Gets called on error
+	 * @param key Key of the failed item
 	 * @return void
 	 */
-	public void onError();
+	public void onError(String key);
 	
 }

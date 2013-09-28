@@ -12,8 +12,8 @@ LocalStorageItemCallback cb = new LocalStorageItemCallback() {
 	}
 	
 	@Override
-	public void onError() {
-		System.out.println("ERROR");
+	public void onError(String key) {
+		System.out.println("ERROR item = \"" + key + "\"");
 	}
 	
 };
@@ -28,3 +28,18 @@ ls.getItem("test", cb);
 
 ls.clear();
 ```
+See also: "eu.maxschuster.vaadin.localstorage.test.LocalStorageUI.java"
+
+# Installation
+
+Export the Project as "Vaadin Add-on Package" or take a ".jar" file from the dist folder
+and put it into your Projects WEB-INF/lib folder.
+
+**Now recompile your widgetset.**
+
+# Testing
+
+## localStorage is not supported
+
+If you set eu.maxschuster.vaadin.localstorage.LocalStorage.setSimulateNotSupported(boolean)
+to true you can see how your application will behave when localStorage is not supported.

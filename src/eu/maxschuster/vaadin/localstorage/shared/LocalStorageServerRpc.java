@@ -38,4 +38,6 @@ public interface LocalStorageServerRpc extends ServerRpc {
 			int callback, boolean success,
 			String key, String oldData, String data);
 	
+	public void triggerItemUpdateEvent(String key, String oldData, String data);
+	
 }

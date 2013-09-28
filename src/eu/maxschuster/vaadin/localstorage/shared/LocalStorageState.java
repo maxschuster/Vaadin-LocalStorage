@@ -18,16 +18,20 @@
 
 package eu.maxschuster.vaadin.localstorage.shared;
 
-import com.vaadin.server.Extension;
 import com.vaadin.shared.communication.SharedState;
 
 import eu.maxschuster.vaadin.localstorage.LocalStorage;
 
 /**
- * {@link SharedState} for the {@link LocalStorage} {@link Extension}.
+ * {@link SharedState} for {@link LocalStorage}.
  * @author Max Schuster <dev@maxschutser.eu>
  */
 @SuppressWarnings("serial")
 public class LocalStorageState extends SharedState {
+	
+	/**
+	 * Client side should act as if localStorage is not supported
+	 */
+	public boolean simulateNotSupported = false;
 	
 }

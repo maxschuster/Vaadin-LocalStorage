@@ -18,7 +18,11 @@
 
 package eu.maxschuster.vaadin.localstorage.client;
 
+import java.util.Set;
+
 import com.google.gwt.storage.client.Storage;
+import com.google.gwt.storage.client.StorageEvent;
+import com.google.gwt.storage.client.StorageEvent.Handler;
 import com.vaadin.client.ServerConnector;
 import com.vaadin.client.communication.RpcProxy;
 import com.vaadin.client.communication.StateChangeEvent;
@@ -28,6 +32,7 @@ import com.vaadin.shared.communication.ServerRpc;
 import com.vaadin.shared.ui.Connect;
 
 import eu.maxschuster.vaadin.localstorage.LocalStorage;
+import eu.maxschuster.vaadin.localstorage.LocalStorage.ItemUpdateEvent;
 import eu.maxschuster.vaadin.localstorage.shared.LocalStorageServerRpc;
 import eu.maxschuster.vaadin.localstorage.shared.LocalStorageState;
 
@@ -50,14 +55,17 @@ public class LocalStorageConnector extends AbstractExtensionConnector {
 		 */
 		@Override
 		public void getItem(String key, int callback) {
-			boolean supported = Storage.isSupported();
+			boolean supported = isSupported();
 			String data = null;
+			
 			if (supported) {
-				Storage s = Storage.getSessionStorageIfSupported();
+				Storage s = Storage.getLocalStorageIfSupported();
 				data = s.getItem(key);
 			}
-			if (callback > -1)
+			
+			if (callback > -1) {
 				serverRpc.callLocalStorageItemCallback(callback, supported, key, null, data);
+			}
 		}
 
 		/*
@@ -67,18 +75,22 @@ public class LocalStorageConnector extends AbstractExtensionConnector {
 		@Override
 		public void setItem(String key, String data,
 				int callback) {
-			boolean supported = Storage.isSupported();
+			boolean supported = isSupported();
 			String oldData = null;
+			
 			if (supported) {
-				Storage s = Storage.getSessionStorageIfSupported();
+				Storage s = Storage.getLocalStorageIfSupported();
 				oldData = s.getItem(key);
-				if (data != null)
+				if (data != null) {
 					s.setItem(key, data);
-				else
+				} else {
 					s.removeItem(key);
+				}
 			}
-			if (callback > -1)
+			
+			if (callback > -1) {
 				serverRpc.callLocalStorageItemCallback(callback, supported, key, oldData, data);
+			}
 		}
 
 		/*
@@ -87,13 +99,16 @@ public class LocalStorageConnector extends AbstractExtensionConnector {
 		 */
 		@Override
 		public void clear(int callback) {
-			boolean supported = Storage.isSupported();
+			boolean supported = isSupported();
+			
 			if (supported) {
-				Storage s = Storage.getSessionStorageIfSupported();
+				Storage s = Storage.getLocalStorageIfSupported();
 				s.clear();
 			}
-			if (callback > -1)
+			
+			if (callback > -1) {
 				serverRpc.callLocalStorageItemCallback(callback, supported, null, null, null);
+			}
 		}
 		
 	};
@@ -105,11 +120,9 @@ public class LocalStorageConnector extends AbstractExtensionConnector {
 			RpcProxy.create(LocalStorageServerRpc.class, this);
 	
 	/**
-	 * Constructor
+	 * Handler for {@link StorageEvent}s
 	 */
-	public LocalStorageConnector() {
-		registerRpc(LocalStorageClientRpc.class, clientRpc);
-	}
+	private final LocalStorageHandler storageEventHandler = new LocalStorageHandler();
 
 	/*
 	 * (non-Javadoc)
@@ -117,7 +130,7 @@ public class LocalStorageConnector extends AbstractExtensionConnector {
 	 */
 	@Override
 	protected void extend(ServerConnector target) {
-		
+		registerRpc(LocalStorageClientRpc.class, clientRpc);
 	}
 
 	/*
@@ -128,6 +141,13 @@ public class LocalStorageConnector extends AbstractExtensionConnector {
 	public LocalStorageState getState() {
 		return (LocalStorageState) super.getState();
 	}
+	
+	/**
+	 * @return localStorage is supported
+	 */
+	private boolean isSupported() {
+		return !getState().simulateNotSupported && Storage.isLocalStorageSupported();
+	}
 
 	/* (non-Javadoc)
 	 * @see com.vaadin.client.ui.AbstractConnector#onStateChanged(com.vaadin.client.communication.StateChangeEvent)
@@ -135,6 +155,56 @@ public class LocalStorageConnector extends AbstractExtensionConnector {
 	@Override
 	public void onStateChanged(StateChangeEvent stateChangeEvent) {
 		super.onStateChanged(stateChangeEvent);
+		if (stateChangeEvent.hasPropertyChanged("registeredEventListeners")) {
+			Set<String> listeners = getState().registeredEventListeners;
+			if (listeners != null) {
+				// Fire update events when a listener is defined
+				if (listeners.contains(ItemUpdateEvent.ITEM_UPDATE_EVENT_IDENTIFIER)) {
+					if (!storageEventHandler.isAttached()) {
+						Storage.addStorageEventHandler(storageEventHandler);
+						storageEventHandler.setAttached(true);
+					}
+				} else {
+					if (storageEventHandler.isAttached()) {
+						Storage.removeStorageEventHandler(storageEventHandler);
+						storageEventHandler.setAttached(true);
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * {@link Handler} implementation with additional
+	 * {@link LocalStorageHandler#isAttached()} method.
+	 * @author Max Schuster <dev@maxschutser.eu>
+	 */
+	private class LocalStorageHandler implements StorageEvent.Handler {
+		
+		/**
+		 * Is already attached
+		 */
+		private boolean attached = false;
+		
+		@Override
+		public void onStorageChange(StorageEvent event) {
+			serverRpc.triggerItemUpdateEvent(event.getKey(), event.getOldValue(), event.getNewValue());
+		}
+
+		/**
+		 * @return Is already attached
+		 */
+		public boolean isAttached() {
+			return attached;
+		}
+
+		/**
+		 * @param attached Set the attached property
+		 */
+		public void setAttached(boolean attached) {
+			this.attached = attached;
+		}
+		
 	}
 
 }
